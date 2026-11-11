@@ -3,10 +3,10 @@
 A ready-to-teach lesson on budgeting for Year 10 Financial Maths, with a class game played on laptops.
 Nothing to install: open it in a browser and project it.
 
-| Who | Page |
+| Who | Open this |
 |---|---|
-| Teacher (projector) | `teacher/` on this site |
-| Students (one laptop per group) | the main page of this site |
+| **Teacher** (projector) | **https://finmaths.github.io/budget/teacher/** |
+| **Students** (one laptop per group) | **https://finmaths.github.io/budget/** |
 
 The projector shows the student address in big letters when it is time to join.
 
