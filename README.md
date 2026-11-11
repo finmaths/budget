@@ -20,6 +20,41 @@ The projector shows the student address in big letters when it is time to join.
 6. **Best buy** and **small spending adds up** (a daily coffee over a year)
 7. **Life Happens game** (about 15 minutes, below)
 
+## NSW syllabus links
+
+NSW Mathematics K–10 Syllabus (2022), Stage 5 **Financial mathematics A**.
+
+| Outcome | Where it is in this lesson |
+|---|---|
+| **MA5-FIN-C-01** solves financial problems involving simple interest, earning money and spending money | Starter, average pay, take-home pay, minimum wage |
+| **MAO-WM-01** develops understanding and fluency in mathematics through exploring and connecting mathematical concepts, choosing and applying mathematical techniques to solve problems, and communicating their thinking and reasoning coherently and clearly | Checking whether estimates are reasonable; the Life Happens game (groups decide, justify and cut costs) |
+
+Content points from *Solve problems involving earning money* (MA5-FIN-C-01):
+
+- Calculate weekly, fortnightly, monthly and yearly earnings assuming 1 year = 52 weeks
+  → average salary per month; minimum wage per month; rent per month (weekly rent × 52 ÷ 12)
+- Use published tables to calculate tax under the Australian Pay-As-You-Go (PAYG) taxation system
+  → the starter, worked from the tax table
+- Calculate net earnings after deductions and taxation
+  → what reaches your bank account after tax and the Medicare levy
+
+Also drawn on:
+
+- **MA4-RAT-C-01** (Stage 4, Ratios and rates): *Examine financial applications of rates, such as best buys* → the best buy slide.
+- **MALS-FIN-02** (Life Skills): *plans and manages personal finances*. Its examples include
+  *calculating what is available to spend on leisure activities from a weekly wage after essential payments have been made*
+  and *developing a budget*. This is the closest wording in the syllabus to the budgeting part of the lesson.
+
+Note: making a budget is not a separate dot point in the Stage 5 content for MA5-FIN-C-01. In this lesson it is the
+context for earning and spending money, using the learning intentions below.
+
+**Learning intentions**
+
+1. Identify types of expenses.
+2. Classify expenses as fixed or variable.
+3. Calculate savings and other expenses from a budget.
+4. Find the best buy.
+
 Move through the slides with **Space** or **→**, go back with **←**. Each slide reveals one step at a time.
 
 ## Life Happens: how the game runs
