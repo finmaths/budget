@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Life Happens</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}
+main{max-width:680px;margin:0 auto;padding:24px 20px 60px}
+h1{font-size:30px;margin:0}
+.hd{position:sticky;top:0;background:#fff;padding:10px 0;border-bottom:2px solid #111;z-index:2}
+.hdr{display:flex;justify-content:space-between;align-items:center}
+.surbar{background:#d0021b;color:#fff;font-size:18px;padding:8px 10px;margin-top:8px}
+.pop{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:10;padding:20px}
+.popin{background:#fff;border:8px solid #d0021b;padding:24px;max-width:520px;text-align:center;font-size:22px}
+.popin h2{color:#d0021b;font-size:30px;margin:0 0 10px}
+.popin .big{font-size:56px;font-weight:700}
+input.ro{background:#f2f2f2}
+.tm{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums}
+.tm.warn{color:#d0021b}
+.sub{font-size:20px;color:#555;margin:14px 0}
+input{font-size:24px;border:2px solid #111;padding:8px 10px}
+button{font-size:24px;font-weight:700;background:#111;color:#fff;border:2px solid #111;padding:12px 20px;cursor:pointer}
+button.alt{background:#fff;color:#111}
+.center{text-align:center;padding-top:40px}
+.center input{width:100%;height:84px;font-size:46px;text-align:center;letter-spacing:6px;text-transform:uppercase}
+.center button{width:100%;margin-top:14px;height:72px}
+.err{color:#d0021b;font-size:20px;font-weight:700;margin:10px 0 0}
+.alert{border:4px solid #d0021b;background:#fff1f1;padding:16px;margin:16px 0;font-size:24px}
+.alert h2{margin:0 0 8px;color:#d0021b;font-size:26px}
+.alert form{display:flex;gap:10px}
+.alert input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:4px;text-align:center}
+.inc{border:3px solid #111;padding:14px 16px;margin:16px 0;font-size:24px}
+.inc b{font-size:30px;white-space:nowrap}
+.neg{color:#d0021b}.pos{color:#0a7d38}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #ccc}
+.row .lb{flex:1;font-size:21px}
+.row .lb small{display:block;color:#666;font-size:16px}
+.row input{width:140px;text-align:right}
+.row input.nm{width:auto;flex:1;text-align:left}
+.opts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+button.opt{font-size:16px;font-weight:400;padding:6px 10px;background:#fff;color:#111;border:2px solid #111}
+button.opt.on{background:#111;color:#fff;font-weight:700}
+.calc{border:3px dashed #111;padding:16px;margin-top:18px;font-size:22px}
+.calc b{display:block;font-size:24px;margin-bottom:6px}
+.saved{font-size:16px;color:#0a7d38;min-height:20px;text-align:right}
+.res{font-size:22px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+button.opt{display:flex;justify-content:space-between;gap:12px;text-align:left;width:100%;font-size:17px;padding:9px 12px}
+button.opt b{white-space:nowrap}
+button.opt span{flex:1;min-width:0;white-space:normal}
+.opts{width:100%}
+.nm2{font-size:21px}
+.val{min-width:90px;text-align:right;font-size:22px;font-weight:700;align-self:flex-start;padding-top:2px}
+@media (max-width:640px){
+  .row{flex-wrap:wrap;gap:8px}
+  .row .lb{flex:1 1 100%}
+  .row input{flex:1;width:auto}
+  .row input.nm{flex:1 1 100%}
+  button.opt{font-size:15px;padding:7px 9px;white-space:nowrap}
+  .tm{font-size:30px}
+}
+.res div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #ccc}
+.res .big{font-size:34px;font-weight:700;border-bottom:0}
+</style>
+</head>
+<body>
+<main id="m"></main>
+<script>
+'use strict';
+
+/* online: every /api/ call goes to api.php */
+(function(){const of=window.fetch.bind(window);window.fetch=(u,o)=>typeof u==='string'&&u.startsWith('/api/')?of('https://budget.lungjyi.net/api.php?p='+encodeURIComponent(u),o):of(u,o);})();
+const m=document.getElementById('m');
+let dev='';try{dev=localStorage.getItem('y10-budget-dev')||'';if(!dev){dev=Math.random().toString(36).slice(2,12);localStorage.setItem('y10-budget-dev',dev);}}catch(e){dev=Math.random().toString(36).slice(2,12);}
+const Q=()=>'?d='+dev;
+let group=null, data=null, err='', typed='', slipTyped='', pending=null, savedAt=0, remAt=0, timer=null;
+const draft={picks:{},amounts:{},other:{name:'',amount:''}};
+let loaded=false;
+try{group=localStorage.getItem('y10-budget-group');}catch(e){}
+const esc=(x)=>String(x??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sign=(a)=>(a<0?'−':'+')+'$'+Math.abs(a).toLocaleString('en-AU');
+const cash=(a)=>(a<0?'−':'')+'$'+Math.abs(Math.round(a)).toLocaleString('en-AU');
+function left(){if(!data||data.remaining==null)return null;return Math.max(0,data.remaining-(Date.now()-remAt)/1000);}
+function clock(){const l=left();if(l==null)return '';const s=Math.ceil(l);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function head(){const l=left();return `<div class="hd"><div class="hdr"><h1>Group ${data.group}</h1><span class="tm${l!=null&&l<=data.surpriseAt?' warn':''}" id="tm">${l==null?'':l<=0?"Time's up":clock()}</span></div>${surBar()}</div>`+surPop();}
+let surClosed=false;
+function surPop(){const x=data.surprise;if(!x||data.phase==='over'||surClosed)return '';return `<div class="pop"><div class="popin"><h2>Surprise for every group!</h2><p>${esc(x.t)}</p><div class="neg big">${sign(x.a)}</div><p><b>Cut something from your budget now!</b></p><button id="surclose">Close</button></div></div>`;}
+function surBar(){const x=data.surprise;return x&&data.phase!=='over'&&surClosed?`<div class="surbar">Surprise: ${esc(x.t)} <b>${sign(x.a)}</b> Cut something now!</div>`:'';}
+function surBox(){const x=data.surprise;return x&&data.phase!=='over'&&false?`<div class="alert"><h2>Surprise for every group!</h2>${esc(x.t)} <b class="neg">${sign(x.a)}</b><p style="margin:8px 0 0;font-weight:700">Cut something from your budget now!</p></div>`:'';}
+function incBox(){const i=data.incident;return i?`<div class="inc">Incident (slip ${esc(i.code)}): ${esc(i.t)} <b class="${i.a<0?'neg':'pos'}">${sign(i.a)}</b></div>`:'';}
+function slipBox(){
+  if(data.incident)return '';
+  if(pending)return `<div class="alert"><h2>Lock in slip ${esc(pending)}?</h2><p>You cannot change it after this.</p><button id="yes">Lock in</button> <button class="alt" id="no">Go back</button></div>`;
+  return `<div class="alert"><h2>Draw a slip from the bucket and type the code.</h2><form id="s"><input id="sc" maxlength="4" autocomplete="off" placeholder="A1" value="${esc(slipTyped)}"><button>Enter</button></form>${err?`<p class="err">${esc(err)}</p>`:''}</div>`;}
+function rent(it,n){return Math.round(it.weekly[n]*52/12).toLocaleString('en-AU');}
+function form(){
+  const rows=data.items.map(it=>{const pk=it.key==='electricity'?(draft.picks.housing||0):draft.picks[it.key];
+    const val=it.weekly?rent(it,draft.picks[it.key]||0):it.byHousing?it.byHousing[draft.picks.housing||0]:(pk!=null?it.prices[pk]:null);
+    const opts=it.byHousing?`<small>Set by your rent choice: <b>$${val}</b> a month</small>`:`<div class="opts">${it.opts.map((o,n)=>`<button type="button" class="opt${draft.picks[it.key]===n?' on':''}" data-k="${it.key}" data-i="${n}"><span>${esc(o)}${it.weekly?` ($${it.weekly[n]} a week)`:''}</span><b>$${it.weekly?rent(it,n):it.prices[n]}</b></button>`).join('')}</div>`;
+    return `<div class="row"><div class="lb"><b class="nm2">${esc(it.label)}</b>${opts}</div></div>`;}).join('');
+  return `<p class="sub">You have just finished high school, started uni and moved out of home. Income this month: <b>$${data.income.toLocaleString('en-AU')}</b>. Choose one option for each thing.</p>${rows}
+  <div class="saved" id="sv"></div>
+  <div class="calc"><b>Money left this month: calculate it yourself!</b>Be careful: keep your budget under control.</div>`;}
+function draw(){
+  if(!group||!data){m.innerHTML=`<div class="center"><h1>Life Happens</h1><p class="sub">Enter your group code<br><b style="color:#d0021b">One laptop per group. Only one person logs in.</b></p><form id="j"><input id="c" inputmode="numeric" maxlength="4" autocomplete="off" value="${esc(typed)}"><button>Join</button></form>${err?`<p class="err">${esc(err)}</p>`:''}</div>`;const c=document.getElementById('c');if(c)c.focus();return;}
+  if(!data.incident&&data.phase!=='over'){m.innerHTML=head()+slipBox();const c=document.getElementById('sc');if(c&&!pending)c.focus();return;}
+  if(data.phase==='wait'){m.innerHTML=head()+incBox()+`<p class="center sub">Wait for your teacher to start the timer.</p>`;return;}
+  if(data.phase==='over'){const r=data.result||{cost:0,left:data.income};
+    m.innerHTML=head()+incBox()+`<div class="res"><div><span>Income</span><b>$${data.income.toLocaleString('en-AU')}</b></div>${data.incident?`<div><span>Incident</span><b>${sign(data.incident.a)}</b></div>`:''}${data.surprise?`<div><span>Surprise</span><b>${sign(data.surprise.a)}</b></div>`:''}<div><span>Your costs</span><b>${cash(r.cost)}</b></div><div class="big"><span>Money left</span><span class="${r.left<0?'neg':'pos'}">${cash(r.left)}</span></div></div><p class="sub">Your budget is locked.</p>`;return;}
+  m.innerHTML=head()+surBox()+slipBox()+incBox()+form();
+}
+function tick(){const t=document.getElementById('tm');if(!t||!data)return;const l=left();t.textContent=l==null?'':l<=0?"Time's up":clock();t.className='tm'+(l!=null&&l<=data.surpriseAt?' warn':'');}
+function load(j){
+  const before=data?data.phase+'|'+!!data.incident+'|'+!!data.surprise:null;data=j;remAt=Date.now();
+  if(!loaded&&j.plan){const p=j.plan;Object.assign(draft.picks,p.picks||{});for(const k in (p.amounts||{}))draft.amounts[k]=p.amounts[k]==null?'':p.amounts[k];if(p.other)draft.other={name:p.other.name||'',amount:p.other.amount==null?'':p.other.amount};}
+  if(!loaded&&!j.plan&&j.items)j.items.forEach(it=>{if(it.weekly&&draft.picks[it.key]==null)draft.picks[it.key]=0;});
+  loaded=true;
+  return before!==data.phase+'|'+!!data.incident+'|'+!!data.surprise;}
+async function pull(){
+  if(!group)return;
+  try{const r=await fetch('/api/g/'+group+Q());const j=await r.json();
+    if(j.error&&!j.group){group=null;data=null;err=j.error;try{localStorage.removeItem('y10-budget-group');}catch(e){}draw();return;}
+    const changed=load(j);if(changed&&!(document.activeElement&&document.activeElement.id==='sc'))draw();
+  }catch(e){}
+}
+async function save(){
+  const r=await fetch('/api/g/'+group+'/plan'+Q(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(draft)}).catch(()=>null);
+  const j=r?await r.json():null;const sv=document.getElementById('sv');
+  if(!j){if(sv)sv.textContent='Not saved: no connection.';return;}
+  const changed=load(j);if(j.warning&&j.plan){for(const k in j.plan.amounts){const it=data.items.find(x=>x.key===k);if(it&&it.min){draft.amounts[k]=j.plan.amounts[k];const el=document.querySelector(`input[data-a="${k}"]`);if(el&&document.activeElement!==el)el.value=j.plan.amounts[k];}}}
+  if(sv){sv.textContent=j.error?j.error:j.warning?j.warning:'Saved';sv.style.color=j.warning||j.error?'#d0021b':'';}if(changed)draw();
+}
+m.addEventListener('input',(e)=>{const t=e.target;
+  if(t.id==='c'){typed=t.value;return;} if(t.id==='sc'){slipTyped=t.value;return;}
+  if(t.dataset.a!==undefined)draft.amounts[t.dataset.a]=t.value; else if(t.dataset.o)draft.other[t.dataset.o]=t.value; else return;
+  const sv=document.getElementById('sv');if(sv)sv.textContent='Saving…';clearTimeout(timer);timer=setTimeout(save,600);});
+m.addEventListener('submit',async(e)=>{e.preventDefault();err='';
+  if(e.target.id==='j'){const c=typed.trim();const r=await fetch('/api/g/'+c+Q()).catch(()=>null);const j=r?await r.json():{error:'No connection.'};
+    if(j.error){err=j.error;draw();return;}group=c;typed='';try{localStorage.setItem('y10-budget-group',c);}catch(x){}load(j);draw();return;}
+  const c=slipTyped.trim().toUpperCase();if(!c)return;pending=c;draw();});
+m.addEventListener('click',async(e)=>{const o=e.target.closest('button.opt');
+  if(o){draft.picks[o.dataset.k]=+o.dataset.i;draw();save();return;}
+  if(e.target.id==='surclose'){surClosed=true;draw();return;}
+  if(e.target.id==='no'){pending=null;draw();return;}
+  if(e.target.id==='yes'){const code=pending;pending=null;
+    const r=await fetch('/api/g/'+group+'/submit'+Q(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})}).catch(()=>null);
+    const j=r?await r.json():{error:'No connection. Try again.'};if(j.group)load(j);err=j.error||'';slipTyped='';draw();}});
+draw();pull();setInterval(pull,2000);setInterval(tick,250);
+</script>
+</body>
+</html>

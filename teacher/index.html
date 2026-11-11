@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>y10 Budget</title>
+<style>
+:root{--ink:#111;--paper:#fff;--line:#c9c9c9;--soft:#f2f2f2;--red:#d0021b;--green:#0a7d38;--blue:#1450b8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#000;font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+#fit{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#stage{width:1600px;height:900px;background:var(--paper);position:relative;flex:none;transform-origin:center center}
+.bar{height:96px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 44px;font-size:50px;font-weight:700}
+.bar small{font-size:32px;font-weight:400}
+.body{position:absolute;left:0;right:0;top:96px;bottom:64px;padding:30px 44px}
+.nav{position:absolute;left:0;right:0;bottom:0;height:64px;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 20px;font-size:24px;background:var(--soft)}
+.nav button{height:48px;padding:0 22px;border:1px solid #888;background:#fff;border-radius:6px}
+.nav .go{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700;padding:0 44px}
+.nav .sp{flex:1}
+.nav .count{color:#555}
+.big{font-size:190px;font-weight:700;line-height:1.1}
+.mid{font-size:50px;line-height:1.25}
+.lead{font-size:46px;margin:0 0 8px}
+.ask{display:flex;justify-content:space-between;align-items:center;gap:30px;font-size:52px;font-weight:700;padding:22px 0}
+.ans{color:var(--red);font-weight:700;white-space:nowrap}
+.hide{visibility:hidden}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;justify-content:space-between;align-items:baseline;font-size:62px;padding:24px 0;border-bottom:2px solid var(--line)}
+.row b{font-size:76px}
+.row.end{border-bottom:0}
+.row.end b{color:var(--red)}
+.hbar{display:flex;align-items:center;gap:24px;margin:26px 0;font-size:44px}
+.hbar .l{width:440px}
+.hbar .t{flex:1}
+.hbar i{display:flex;align-items:center;justify-content:flex-end;height:112px;background:#333;color:#fff;padding-right:24px;font-style:normal;font-weight:700;font-size:58px}
+.hbar.red i{background:var(--red)}
+.chart{height:430px;display:flex;align-items:flex-end;gap:14px;border-bottom:3px solid var(--ink)}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:27px}
+.col s{display:block;width:100%;text-decoration:none;background:#555;transition:height .9s ease;height:0}
+.col.boss s{background:var(--red)}
+.names{display:flex;gap:14px;font-size:27px;text-align:center;margin-top:6px}
+.names div{flex:1}
+.stat{display:flex;gap:90px;font-size:46px;margin-top:14px}
+.stat b{font-size:50px}
+.stat .ans{font-size:50px}
+.rule2{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:12px}
+.rule2 div{border:3px solid var(--ink);padding:18px 24px;font-size:38px;line-height:1.25}
+.rule2 b{display:block;font-size:44px}
+.money{font-size:40px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.money b{font-size:56px}
+.board{display:grid;grid-template-columns:1fr 470px;gap:30px;height:610px}
+.items{display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:82px;gap:10px 22px;align-content:start}
+.item{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--line);font-size:38px;gap:8px}
+.item input{width:130px;font-size:36px;border:1px solid var(--line);text-align:right;padding:2px 6px;appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.item .x{border:0;background:none;font-size:34px;color:#888;width:36px}
+.item span.n{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.chips{display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start}
+.chips button{font-size:29px;padding:11px 16px;border:2px solid var(--ink);background:#fff;border-radius:30px}
+.chips button:disabled{opacity:.25}
+.add{display:flex;gap:8px;margin-top:16px;font-size:28px}
+.add input{height:56px;border:2px solid var(--ink);padding:0 10px;min-width:0}
+.add input.nm{flex:1}
+.add input.am{width:110px}
+.add button{height:56px;padding:0 16px;border:2px solid var(--ink);background:var(--ink);color:#fff}
+.pile{display:flex;flex-wrap:wrap;gap:10px;min-height:76px;margin-bottom:16px;align-items:flex-start}
+.pill{display:flex;align-items:center;border:2px solid var(--ink);border-radius:8px;font-size:32px;overflow:hidden}
+.pill button{border:0;background:var(--ink);color:#fff;font-weight:700;width:58px;height:62px;font-size:32px}
+.pill span{padding:0 16px;white-space:nowrap}
+.pill.wrong{border-color:var(--red);color:var(--red);font-weight:700;animation:shake .45s ease}
+.pill.wrong button{background:var(--red)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-14px)}40%{transform:translateX(14px)}60%{transform:translateX(-9px)}80%{transform:translateX(9px)}}
+.bin button.ok{animation:okf 1.1s ease}
+@keyframes okf{0%{background:#a9e6bf}100%{background:transparent}}
+.sort{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.bin{border:3px solid var(--ink);min-height:340px;padding:12px 22px}
+.bin h3{margin:0 0 6px;font-size:40px}
+.bin button{display:flex;justify-content:space-between;width:100%;border:0;background:none;font-size:36px;padding:6px 0;border-bottom:1px solid var(--line)}
+.sets{display:flex;gap:30px;font-size:34px;align-items:center;margin-bottom:8px}
+.seg{display:inline-flex}
+.seg button{border:2px solid var(--ink);background:#fff;font-size:30px;padding:8px 18px;margin-left:-2px}
+.seg button.on{background:var(--ink);color:#fff}
+.gs{font-size:27px;border-collapse:collapse;width:100%}
+.gs td,.gs th{padding:4px 5px;text-align:left;font-size:27px;white-space:nowrap}
+.gs th{font-size:30px;border-bottom:3px solid var(--ink)}
+.gs .seg button{font-size:26px;padding:7px 10px;line-height:1.12}
+.gs .seg button em{font-style:normal;display:block;font-size:25px}
+.gs td.l{font-size:36px;font-weight:700;text-align:right;width:130px}
+.gs td.g{font-size:32px;font-weight:700}
+.neg{color:var(--red)}
+.pos{color:var(--green)}
+.warn{color:var(--red);font-size:30px;font-weight:700}
+.cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.card{border:3px solid var(--line);padding:8px 16px;height:190px;position:relative}
+.card .inc{font-size:26px;line-height:1.2;margin:4px 0;height:62px;overflow:hidden}
+.card .inc.wait{color:#999}
+.card.now{border-color:var(--blue);border-width:6px;padding:7px 13px}
+.card h4{margin:0;font-size:30px}
+.card p{margin:0;font-size:21px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .bal{font-size:58px;font-weight:700;line-height:1.15}
+.flash{animation:fl 1s ease}
+@keyframes fl{0%{background:#ffe08a}100%{background:#fff}}
+.turn{display:flex;align-items:center;justify-content:space-between;font-size:38px;font-weight:700;margin-bottom:10px}
+.turn button{font-size:26px;font-weight:400;padding:8px 16px;border:2px solid var(--ink);background:#fff;margin-left:8px}
+.pad{display:grid;grid-template-columns:repeat(12,1fr);gap:9px}
+.pad button{height:70px;font-size:36px;font-weight:700;border:2px solid var(--ink);background:#fff}
+.pad button:disabled{opacity:.18}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:5}
+.sheet{background:#fff;width:1240px;padding:50px 60px;text-align:center}
+.sheet h2{margin:0;font-size:40px;font-weight:400}
+.sheet p{font-size:64px;font-weight:700;margin:30px 0;line-height:1.2}
+.sheet .amt{font-size:130px;font-weight:700;line-height:1.1}
+.sheet .bt{margin-top:34px;display:flex;justify-content:center;gap:20px}
+.sheet button{font-size:38px;padding:14px 40px;border:2px solid var(--ink);background:#fff}
+.sheet button.go{background:var(--ink);color:#fff}
+.rank{display:grid;grid-template-columns:1fr 1fr;gap:6px 50px;margin-bottom:22px}
+.rank div{display:flex;justify-content:space-between;font-size:50px;padding:10px 0;border-bottom:2px solid var(--line)}
+.rank b{font-size:54px}
+.step{font-size:54px;padding:20px 0;display:flex;gap:30px}
+.step b{width:54px}
+/* print views */
+.print{background:#fff;color:#000}
+.taxp{display:grid;grid-template-columns:600px minmax(0,1fr);gap:44px;align-items:start}
+.taxp .row{font-size:38px;padding:30px 0;white-space:nowrap}
+.taxp .row b{font-size:52px}
+.stp{border:3px solid var(--ink);padding:16px 24px}
+.taxt.mini{margin-bottom:16px;font-size:23px}
+.stp .rule{background:var(--soft);font-size:28px;font-weight:700;padding:8px 12px;margin:0 0 14px;border-left:6px solid var(--red)}
+.stp .s{margin:0 0 14px}
+.stp .s > span{display:block;font-size:28px;color:#555;font-weight:700}
+.stp .s b{display:block;font-size:37px;white-space:nowrap;min-height:46px}
+.medf{border:3px solid var(--ink);padding:34px 36px;font-size:46px;line-height:1.25}
+.medf b{display:block;font-size:48px;margin-bottom:26px}
+.medf.taxw{padding:26px 32px}
+.medf.taxw b{font-size:40px;margin-bottom:18px;color:var(--red)}
+.medf.taxw p{font-size:44px;margin:0 0 16px;white-space:nowrap}
+.medf p{margin:0 0 22px;font-size:56px}
+.sq{font-size:40px;font-weight:700;line-height:1.25;margin:0 0 14px}
+.sw{margin-top:40px}
+.r{color:var(--red)}
+.sw p{font-size:34px;font-weight:700;color:var(--ink);margin:0 0 26px;white-space:nowrap}
+.taxt{width:100%;border-collapse:collapse;font-size:23px;line-height:1.2}
+.taxt th{background:#b85c6b;color:#fff;text-align:left;padding:12px 12px;border:2px solid #b85c6b;white-space:nowrap}
+.taxt td{padding:30px 12px;border:2px solid #888}
+.taxt.mini td{padding:16px 12px}
+.taxt td{white-space:nowrap}
+.taxt tr.on td{border-top:6px solid var(--red);border-bottom:6px solid var(--red)}
+.taxt tr.on td:first-child{border-left:6px solid var(--red)}
+.taxt tr.on td:last-child{border-right:6px solid var(--red)}
+.taxt tr.on b{color:var(--red)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:50px}
+.qa{font-size:42px;font-weight:700;line-height:1.2;margin-bottom:30px}
+.qa .ans{display:block;font-size:50px;margin-top:8px;white-space:normal}
+.tbl{font-size:34px}
+.bt-r{display:flex;justify-content:space-between;padding:9px 16px;border-bottom:2px solid var(--line)}
+.bt-r.hd{font-weight:700;border:3px solid var(--ink)}
+.bt-r.sub{font-weight:700;background:var(--soft);padding:5px 16px}
+.cover{position:absolute;left:0;right:0;top:0;bottom:64px;background:#000;color:#fff;text-align:center}
+.cover h1{position:absolute;left:0;right:0;top:186px;margin:0;font-size:100px;font-weight:700}
+.cover i{position:absolute;left:0;right:0;top:366px;height:11px;background:#bae947}
+.cover p{position:absolute;left:0;right:0;top:410px;margin:0;font-size:57px;color:#bae947}
+.cover small{position:absolute;left:0;right:0;top:640px;font-size:40px}
+.mw .ask{font-size:42px;padding:10px 0}
+.src{position:absolute;left:44px;right:44px;bottom:14px;margin:0;font-size:22px;color:#666}
+.tmr{font-size:72px;font-weight:700;font-variant-numeric:tabular-nums;background:var(--red);color:#fff;padding:0 24px;border-radius:10px;line-height:88px;margin-right:-30px}
+.tmr:empty{display:none}
+.tmr.warn{background:#fff;color:var(--red);box-shadow:inset 0 0 0 6px var(--red)}
+.tb{display:flex;align-items:center;gap:26px;font-size:36px;font-weight:700;margin:0 0 18px;min-height:90px}
+.tb.hot{background:var(--red);color:#fff;padding:14px 24px}
+.startbtn{font-size:52px;font-weight:700;padding:24px 48px;background:var(--red);color:#fff;border:0;border-radius:12px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.dlist{max-height:520px;overflow:auto}
+.dr{font-size:30px !important;padding:6px 0 !important}
+.slipgrid{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:35.5mm;width:200mm;margin:0 auto}
+.slipc{border:.4mm dashed #000;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.slipc b{font-size:66pt;line-height:1}
+.slipc small{font-size:10pt;color:#444;margin-top:2mm}
+.pss{padding:6mm 6mm 0}
+.pss .pst td{height:10.6mm}
+.pss .pst td.lb{width:44mm}
+.pss .pst td.amt{width:22mm}
+.pss .sh{display:flex;justify-content:space-between;align-items:baseline;font-size:18pt;margin-bottom:3mm}
+.pss .sh span{font-size:12pt;width:70mm}
+.url2{font-weight:700;line-height:1.12;white-space:nowrap;margin:4px 0 6px}
+.act{position:absolute;left:0;right:0;top:0;bottom:64px;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#fff;text-align:center}
+.act h1{font-size:150px;margin:0 0 30px}
+.act p{font-size:62px;margin:0}
+.scn p{font-size:54px;line-height:1.3;margin:0 0 34px}
+.scn p.sm{font-size:38px;color:#555}
+.sheet.surp{border:10px solid var(--red)}
+.sheet.surp h2{color:var(--red);font-weight:700;font-size:56px}
+.mini.more{background:var(--ink);color:#fff;margin-right:12px}
+.mini{font-size:26px;padding:8px 18px;border:2px solid var(--ink);background:#fff}
+.menu{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:6px 0 18px}
+.mbox{border:3px solid var(--ink);padding:10px 18px}
+.mbox h3{margin:0 0 4px;font-size:34px}
+.mbox p{display:flex;justify-content:space-between;margin:4px 0;font-size:34px}
+.gcs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.gc{border:3px solid var(--line);padding:12px 20px;min-height:200px;background:#fff;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.gc:disabled{cursor:default}
+.gc label.cost{display:flex;align-items:center;gap:6px;font-size:28px;margin:6px 0}
+.gc label.cost input{width:150px;font-size:30px;border:2px solid var(--ink);padding:2px 6px}
+.sheet.detail{width:1000px;text-align:left}
+.dr{display:flex;justify-content:space-between;gap:30px;font-size:38px;padding:10px 0;border-bottom:2px solid var(--line)}
+.dr.end{border-bottom:0;font-weight:700}
+.gc.done{border-color:var(--green)}
+.gc h4{margin:0;font-size:40px;display:flex;justify-content:space-between}
+.gc h4 i{font-style:normal;color:var(--green)}
+.gc p{margin:6px 0;font-size:34px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gc b{font-size:50px}
+.jgs{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:44px}
+.jg{border:3px solid var(--ink);padding:14px 20px;font-size:36px;position:relative;background:#fff;text-align:left;font-family:inherit;color:inherit}
+.jg:disabled{opacity:1}
+.jg b{display:block;font-size:80px;line-height:1.1}
+.jg i{position:absolute;top:8px;right:18px;font-style:normal;font-size:52px;font-weight:700;color:var(--green)}
+.key p{font-size:10pt;margin:0 0 .4mm}
+.starter-sheet{width:200mm;margin:0 auto}
+.slip2{height:143.5mm;padding:7mm 6mm 0;box-sizing:border-box;border-bottom:.3mm dashed #000;overflow:hidden}
+.slip2:last-child{border-bottom:0}
+.slip2 .sh{display:flex;justify-content:space-between;align-items:baseline;font-size:18pt;margin-bottom:3mm}
+.slip2 .sh span{font-size:12pt;width:70mm}
+.slip2 .pq{font-size:15pt;margin:0 0 1.5mm}
+.slip2 .taxt{font-size:12pt;margin-top:3mm;width:100%}
+.slip2 .taxt th{background:#ddd;color:#000;border:.3mm solid #000;padding:2.2mm 3mm}
+.slip2 .taxt td{border:.3mm solid #000;padding:2.2mm 3mm}
+.slip2 .taxt b{font-weight:400}
+.slip2 .pw{padding-top:5mm}
+.ps .pq{margin-bottom:3mm}
+.pst{width:100%;border-collapse:collapse;font-size:11.5pt}
+.pst th{background:#ddd;border:.3mm solid #000;padding:1.6mm 2.5mm;text-align:left;font-size:10.5pt}
+.pst td{border:.3mm solid #000;padding:0 2.5mm;height:9.6mm}
+.pst td.lb{width:44mm;font-weight:700}
+.pst td.op span{display:inline-block;margin-right:4mm}
+.pss .pst{font-size:10.5pt}
+.pss .pst td.op{font-size:9.6pt;line-height:1.3;padding-top:.9mm;padding-bottom:.9mm}
+.pst td.op span.hint{color:#555;font-size:10pt}
+.pst td.amt{width:30mm}
+.pst tr.tot td{border-width:.5mm}
+.slip2 .pw p{color:#e0218a;font-size:14pt;margin:0 0 4mm}
+.slip2 .pw .r{color:inherit}
+.script{font-size:11.5pt;line-height:1.38;padding:0}
+.script h1{font-size:18pt;margin:0 0 3mm}
+.script h2{font-size:12.5pt;margin:3.2mm 0 .8mm;break-after:avoid}
+.script p{margin:0 0 .7mm}
+@media print{@page{size:A4;margin:5mm}html,body{background:#fff;height:auto}}
+</style>
+</head>
+<body>
+<div id="fit"><div id="stage"></div></div>
+<script>
+
+/* online: every /api/ call goes to api.php with this class's key */
+(function(){const API='https://budget.lungjyi.net/api.php',RK='y10-budget-room',of=window.fetch.bind(window);
+const SITE=new URL('../',location.href).href.replace(/\/$/,'');
+let room=null;try{room=JSON.parse(localStorage.getItem(RK)||'null');}catch(e){}
+let making=null;
+function make(){if(!making)making=of(API+'?p=/api/new',{method:'POST'}).then(r=>r.json()).then(j=>{if(!j.room)throw new Error(j.error||'No class');room=j;try{localStorage.setItem(RK,JSON.stringify(j));}catch(e){}return j;}).finally(()=>{making=null;});return making;}
+window.fetch=async function(u,o){if(typeof u!=='string'||!u.startsWith('/api/'))return of(u,o);o=Object.assign({},o||{});
+  for(let k=0;k<2;k++){if(!room)await make();
+    const r=await of(API+'?p='+encodeURIComponent(u),Object.assign({},o,{headers:Object.assign({},o.headers||{},{'X-Room':room.room,'X-Token':room.token,'X-Site':SITE})}));
+    if(r.status===401&&k===0){room=null;try{localStorage.removeItem(RK);}catch(e){}continue;}
+    return r;}};
+})();
+'use strict';
+/* ===== Figures (see README for where each one comes from) ===== */
+const BANK = 3751;
+const PRESETS = [
+  ['Rent',3380,'f'],['Groceries',500,'d'],['Electricity',120,'d'],['Internet',80,'f'],['Phone plan',50,'f'],
+  ['Transport',220,'d'],['Clothes',100,'d'],['Streaming',20,'f'],['Eating out',300,'d'],['Going out',200,'d'],['Gym',60,'f'],['Haircuts',40,'d']
+];
+/* 'f' = fixed, 'd' = variable. Items typed in with Other have no set answer, so either bin is accepted. */
+const answerOf=(n)=>{const p=PRESETS.find(x=>x[0]===n);return p?p[2]:null;};
+/* Strict JSON between the markers: server.py reads ITEMS and SURPRISE. */
+/*ITEMS*/ const ITEMS = [
+  {"key": "housing", "label": "Rent", "opts": ["Share house", "Own unit"], "weekly": [400, 600]},
+  {"key": "electricity", "label": "Electricity", "byHousing": [75, 150]},
+  {"key": "transport", "label": "Getting around", "opts": ["I walk or ride a bike", "I take the bus and train", "I drive my own car (petrol, rego, insurance)"], "prices": [0, 50, 250]},
+  {"key": "groceries", "label": "Groceries", "opts": ["I compare prices and buy the best deal", "I buy whatever I like", "I’m a shopaholic"], "prices": [250, 400, 650]},
+  {"key": "takeaway", "label": "Takeaway and eating out", "opts": ["I cook all my meals", "I get takeaway on weekends", "I eat out almost every day"], "prices": [40, 160, 500]},
+  {"key": "coffee", "label": "Coffee and snacks", "opts": ["I don’t drink coffee or eat sweets", "I treat myself a few times a week", "I must have a coffee every day"], "prices": [0, 50, 130]},
+  {"key": "phone", "label": "Phone plan", "opts": ["I just need calls and a little data", "I use a lot of data", "I want unlimited data and the newest phone"], "prices": [20, 45, 110]},
+  {"key": "internet", "label": "Internet", "opts": ["Slow is fine, I want it cheap", "I need fast internet"], "prices": [60, 100]},
+  {"key": "subs", "label": "Subscriptions", "opts": ["I don’t need any", "I need Netflix", "I need Netflix, Disney+ and Spotify"], "prices": [0, 20, 55]},
+  {"key": "clothes", "label": "Clothes and shoes", "opts": ["I can wear the same clothes for 3 years", "I buy something new now and then", "I need new clothes every month"], "prices": [20, 80, 250]},
+  {"key": "haircuts", "label": "Haircuts", "opts": ["I cut my own hair", "I get a basic cut every two months", "I go to the salon every month"], "prices": [0, 20, 90]},
+  {"key": "personal", "label": "Toiletries and skincare", "opts": ["I just buy the basics", "I like a few nice products", "I have a full skincare routine"], "prices": [25, 60, 150]},
+  {"key": "health", "label": "Doctor, dentist and medicine", "opts": ["I’m healthy, I just need the basics", "I go for regular check-ups"], "prices": [20, 80]},
+  {"key": "gym", "label": "Gym or sport", "opts": ["I just join the free Bondi running club", "I must go to a chain gym", "I have a personal trainer"], "prices": [0, 60, 250]},
+  {"key": "friends", "label": "Going out with friends", "opts": ["I stay home most of the month", "I go out every weekend", "I go out a few nights a week"], "prices": [40, 200, 450]},
+  {"key": "events", "label": "Concerts and events", "opts": ["I skip concerts this month", "I go to one concert", "I never miss a festival or concert"], "prices": [0, 150, 400]},
+  {"key": "games", "label": "Games and apps", "opts": ["I only play free games", "I buy a new game sometimes", "I buy new games and in-app extras"], "prices": [0, 30, 120]},
+  {"key": "gifts", "label": "Gifts and birthdays", "opts": ["I never buy gifts for friends", "I buy one or two small presents", "Friends’ birthdays must be celebrated properly"], "prices": [0, 80, 200]},
+  {"key": "pets", "label": "Pets", "opts": ["I don’t have a pet", "I have a cat", "I have a dog"], "prices": [0, 80, 180]}
+]; /*ENDI*/
+/*SURPRISE*/ const SURPRISE = {"t":"You get sick and miss three days of work.","a":-600}; /*ENDS*/
+/*DATA*/ const INCIDENTS = [
+  {"code":"A1","t":"Your phone screen cracks.","a":-280},
+  {"code":"A2","t":"You need new shoes for work.","a":-150},
+  {"code":"A3","t":"Overtime at work.","a":300},
+  {"code":"A4","t":"Dinner for a friend’s birthday.","a":-90},
+  {"code":"A5","t":"Your wallet is stolen.","a":-120},
+  {"code":"A6","t":"Your laptop dies.","a":-700},
+  {"code":"A7","t":"You win a raffle.","a":250},
+  {"code":"A8","t":"You have to pay $200 more for housing this month.","a":-200},
+  {"code":"B1","t":"You are sick for three days without pay.","a":-310},
+  {"code":"B2","t":"You get a tax refund.","a":450},
+  {"code":"B3","t":"You get a fine for travelling without a ticket.","a":-200},
+  {"code":"B4","t":"The electricity bill is higher than usual.","a":-150},
+  {"code":"B5","t":"Birthday money from your grandparents.","a":100},
+  {"code":"B6","t":"Toothache. You need the dentist.","a":-400},
+  {"code":"B7","t":"Your shifts get cut this month.","a":-260},
+  {"code":"B8","t":"You sell your old bike online.","a":180},
+  {"code":"C1","t":"Bonus for being employee of the month.","a":200},
+  {"code":"C2","t":"Your cousin’s wedding: gift and outfit.","a":-250},
+  {"code":"C3","t":"You break your glasses.","a":-300},
+  {"code":"C4","t":"You switch to a cheaper phone plan.","a":60},
+  {"code":"C5","t":"Your dog needs the vet.","a":-420},
+  {"code":"C6","t":"A friend pays back the money they owe you.","a":80},
+  {"code":"C7","t":"Your favourite band is on tour.","a":-180},
+  {"code":"C8","t":"The washing machine breaks. You pay half.","a":-200}
+]; /*END*/
+const ONLINE = location.protocol.startsWith('http');
+
+/* ===== State ===== */
+const KEY='y10-budget-v1';
+const fresh=()=>({s:0,step:0,items:[],sorted:{},nGroups:6,rounds:1,picks:{},costs:{},log:[]});
+let S=fresh(), modal=null, flashG=-1, msg='', prevBoss=false, wrongItem=null, rightItem=null;
+try{const v=JSON.parse(localStorage.getItem(KEY)||'null'); if(v&&v.items) S=Object.assign(fresh(),v);}catch(e){}
+S.rounds=1;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+
+/* ===== Helpers ===== */
+const $=(n)=>'$'+Math.abs(Math.round(n)).toLocaleString('en-AU');
+const sgn=(n)=>(n<0?'−':'')+$(n);
+const plus=(n)=>(n<0?'−':'+')+$(n);
+const esc=(x)=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const vis=(on)=>on?'':' hide';
+function ask(q,a,on){return `<div class="ask"><span>${q}</span><span class="ans${vis(on)}">${a}</span></div>`;}
+function sum(pred){return S.items.filter(pred).reduce((t,i)=>t+(+i.a||0),0);}
+const inc=(g)=>{const e=S.log.find(l=>l.g===g);return e?e.a:0;};
+const GAME_SECONDS=480, SURPRISE_AT=120;
+function tLeft(){if(ONLINE&&NET.address){if(NET.remaining==null)return null;return Math.max(0,NET.remaining-(Date.now()-(NET.at||Date.now()))/1000);}
+  return S.tEnd?Math.max(0,(S.tEnd-Date.now())/1000):null;}
+function surpriseOn(){if(ONLINE&&NET.address)return !!NET.surpriseOn;const l=tLeft();if(l!=null&&l<=SURPRISE_AT)S.surprised=true;return !!S.surprised;}
+function phaseNow(){const l=tLeft();if(l==null)return 'wait';const s=surpriseOn()||l<=SURPRISE_AT;return l<=0?'over':s?'surprise':'plan';}
+function clockText(){const l=tLeft();if(l==null)return '';if(l<=0)return 'Time’s up';const c=Math.ceil(l);return Math.floor(c/60)+':'+String(c%60).padStart(2,'0');}
+const viaLaptops=()=>ONLINE&&NET.address&&!S.manual;
+function leftOf(g){if(viaLaptops()){const p=(NET.plans||{})[g];return p?p.left:null;}
+  return S.costs[g]==null?null:BANK+inc(g)+(surpriseOn()?SURPRISE.a:0)-S.costs[g];}
+function ready(){for(let g=0;g<S.nGroups;g++)if(leftOf(g)==null)return g;return -1;}
+function incidentFor(code){const c=INCIDENTS.find(x=>x.code===code);return {t:c.t,a:c.a};}
+function counts(){const c=Array(S.nGroups).fill(0);S.log.forEach(l=>{if(l.g<c.length)c[l.g]++;});return c;}
+function waiting(){const c=counts(),m=Math.min(...c);return m>=S.rounds?[]:c.map((v,i)=>v===m?i:-1).filter(i=>i>=0);}
+const roundNow=()=>Math.min(Math.min(...counts())+1,S.rounds);
+let NET={join:[],seen:[],address:null,plans:{},remaining:null};
+
+function urlBig(u){const h=u.replace(/^https?:\/\//,'');
+  if(h.length<=30)return `<div class="url2" style="font-size:${Math.min(120,Math.floor(1480/(h.length*0.6)))}px"><div>${h}</div></div>`;
+  const i=h.indexOf('.');const a=h.slice(0,i),b=h.slice(i);
+  const fs=Math.min(104,Math.floor(1480/(Math.max(a.length,b.length)*0.6)));
+  return `<div class="url2" style="font-size:${fs}px"><div>${a}</div><div>${b}</div></div>`;}
+const ctl=(lbl,key,vals)=>`<span>${lbl} <span class="seg">${vals.map(v=>`<button class="${S[key]===v?'on':''}" data-set="${key}" data-val="${v}">${v}</button>`).join('')}</span></span>`;
+function timerBanner(){const ph=phaseNow();
+  if(ph==='wait')return `<div class="tb"><button class="startbtn" data-timer="1">Start 8 minutes</button><span>Draw a slip, type the code, then wait for the timer.</span></div>`;
+  if(ph==='plan')return `<div class="tb"><span>Estimate what everything costs for one month. Be careful: keep your budget under control!</span></div>`;
+  if(ph==='surprise')return `<div class="tb hot"><span>Surprise for every group! ${SURPRISE.t} <b>${plus(SURPRISE.a)}</b><br>Cut something from your budget now!</span></div>`;
+  return `<div class="tb"><span>Time’s up! Budgets are locked.</span></div>`;}
+function setupOnline(){const over=phaseNow()==='over';
+  let cards='';for(let g=0;g<S.nGroups;g++){const p=(NET.plans||{})[g],e=S.log.find(l=>l.g===g),n=p?p.filled:0;
+    cards+=`<button class="gc${n?' done':''}" ${over&&p?`data-detail="${g}"`:'disabled'}><h4>Group ${g+1}<i>${e?'✓':''}</i></h4><p>${n} of ${ITEMS.length-1} chosen</p><p>${e?'Slip '+e.code:'No slip yet'}</p></button>`;}
+  return `<div class="sets"><span>Income: <b>$3,751</b></span><span style="flex:1"></span>${phaseNow()!=='wait'?'<button class="mini more" data-more="1">+1 minute</button>':''}<button class="mini" data-manual="1">Fill in here instead</button></div>${timerBanner()}<div class="gcs">${cards}</div>${over?'<p class="mid" style="font-size:30px;margin-top:14px">Click a group to see its budget.</p>':''}${msg?`<p class="warn">${msg}</p>`:''}`;}
+
+const TAX_ROWS=[['$0 – $18,200','Nil'],['$18,201 – $45,000','15c for each $1 over $18,200'],['$45,001 – $135,000','<b>$4,020</b> plus 30c for each $1 over $45,000'],['$135,001 – $190,000','$31,020 plus 37c for each $1 over $135,000'],['$190,001 and over','$51,370 plus 45c for each $1 over $190,000']];
+function taxTable(onRow){return `<table class="taxt"><tr><th>Taxable income</th><th>Tax on this income</th></tr>${TAX_ROWS.map((r,i)=>`<tr class="${i===onRow?'on':''}"><td>${r[0]}</td><td>${i===onRow?r[1]:r[1].replace(/<\/?b>/g,'')}</td></tr>`).join('')}</table>`;}
+const STARTER_Q=['The average full-time adult in Australia earns $108,352 a year.','Use the tax table to work out their income tax for the year.'];
+const STARTER_A=['<span class="r">$108,352</span> − <span class="r">$45,000</span> = $63,352','<span class="r">0.30</span> × $63,352 = $19,005.60','<span class="r">$4,020</span> + $19,005.60 = $23,025.60'];
+
+/* ===== Scenes ===== */
+const WORKERS=[50,60,65,70,75,80,90,100,110];
+const SCENES=[
+{id:'cover',title:'Budgeting',steps:0,
+ say:['Today we are talking about money: what you earn, what you spend, and how to plan it so it lasts the month.'],
+ view:()=>``},
+{id:'starter',title:'Starter',steps:3,
+ say:['Starter on your desk. One question, using the tax table from last lesson. 〔給 3 分鐘，巡視〕','〔點〕Find the row first. $108,352 is in this row, so take off $45,000: $63,352.','〔點〕30c for each of those dollars: 0.30 times $63,352 is $19,005.60.','〔點〕Add the base amount: $4,020 plus $19,005.60 is $23,025.60 tax for the year. Keep this number, we use it next.'],
+ view:(st)=>`<div class="taxp"><div>${STARTER_Q.map(t=>`<p class="sq">${t}</p>`).join('')}<div class="sw">${STARTER_A.map((t,i)=>`<p class="${st>i?'':'hide'}">${t}</p>`).join('')}</div></div>${taxTable(st>=1?2:-1)}</div>`},
+{title:'Average pay in Australia',steps:1,
+ say:['The average full-time adult in Australia earns about $108,352 a year.','How much is that per month? 〔等，點名〕','〔點〕About $9,029.'],
+ view:(st)=>`<p class="lead">Average full-time adult, per year</p><div class="big">$108,352</div><div style="height:90px"></div>${ask('How much per month?','$9,029',st>=1)}<p class="src">Source: Australian Bureau of Statistics, Average Weekly Earnings, May 2026 (full-time adults: $2,083.70 a week \u00d7 52)</p>`},
+{title:'What reaches your bank account',steps:4,
+ say:['But that is not what lands in your bank account. In the starter you worked out the income tax: $23,025.60 for the year.','〔點〕Take the tax off the pay, and divide by 12 for a month.','〔點〕About $7,111 a month after income tax.','〔點〕Then the Medicare levy. It is 2% of your taxable income: about $181 a month.','〔點〕So about $6,930 lands in your bank.'],
+ view:(st)=>{const stp=(rule,list,shown)=>`<div class="stp"><div class="rule">${rule}</div>${list.map((x,n)=>`<div class="s"><span>${x[0]}</span><b class="${n<shown?'':'hide'}">${x[1]}</b></div>`).join('')}</div>`;
+  const right=st>=3?stp('Medicare levy: 2% of taxable income',[['Step 1 &nbsp; 2% of the pay for a year:','<span class="r">0.02</span> × <span class="r">$108,352</span> = $2,167.04'],['Step 2 &nbsp; Per month:','$2,167.04 ÷ 12 = $180.59'],['Step 3 &nbsp; Take it off:','$7,111 − $181']],3)
+   :stp('Income tax for the year (from the starter): $23,025.60',[['Take the tax off, then ÷ 12:','(<span class="r">$108,352</span> − <span class="r">$23,025.60</span>) ÷ 12 = $7,110.53']],st>=1?1:0);
+  return `<div class="taxp"><div class="rows"><div class="row"><span>Pay per year</span><b>$108,352</b></div><div class="row"><span>Pay per month</span><b>$9,029</b></div><div class="row"><span>After income tax</span><b class="${vis(st>=2)}">$7,111</b></div><div class="row end"><span>After Medicare levy</span><b class="${vis(st>=4)}">$6,930</b></div></div>
+ ${right}</div>`}},
+{id:'minwage',title:'The average vs your first job',steps:3,
+ say:['Back to the average: about $6,930 a month in the bank.','〔點〕Here are nine workers. The mean is $77,778, the median is $75,000. A boss on two million dollars joins. Which changes more, the mean or the median? 〔大拇指：上 mean，下 median，點名問 why〕','〔點〕The mean jumps to $270,000. The median only moves to $77,500. So an average can be pulled up by a few people on very high pay.','〔點〕So most people’s first job at 18 does not pay the average. It pays closer to the minimum wage: about $4,355 a month, and about $3,751 in the bank.'],
+ view:(st)=>{const bar=(cls,l,w,v)=>`<div class="hbar${cls}" style="margin:12px 0"><span class="l">${l}</span><span class="t"><i style="width:${w}%">${v}</i></span></div>`;
+  const avg=bar('','Average full-time',100,'$6,930');
+  if(st>=3)return `<p class="mid">Minimum wage: <b>$4,355</b> a month</p><p class="lead" style="margin-top:40px">In the bank each month</p>${avg}${bar(' red','Minimum wage',(3751/6930*100).toFixed(1),'$3,751')}<p class="src">Source: Fair Work Ombudsman, National Minimum Wage from 1 July 2026 ($1,004.90 a week)</p>`;
+  if(st<1)return `<p class="lead" style="margin:0">In the bank each month</p>${avg}`;
+  const b=st>=2,all=WORKERS.concat([2000]);
+  return `<p class="lead" style="margin:0">In the bank each month</p>${avg}
+  <div class="chart" style="height:220px;margin-top:18px">${all.map((w,n)=>`<div class="col${n===9?' boss':''}${n===9&&!b?' hide':''}"><s data-w="${w}"></s></div>`).join('')}</div>
+  <div class="names">${all.map((w,n)=>`<div class="${n===9&&!b?'hide':''}">${n===9?'Boss ':''}$${w>=1000?(w/1000)+'m':w+'k'}</div>`).join('')}</div>
+  <div class="stat" style="margin-top:8px"><span>Mean: <b class="${b?'r':''}">${b?'$270,000':'$77,778'}</b></span><span>Median: <b class="${b?'r':''}">${b?'$77,500':'$75,000'}</b></span></div>
+  <div class="mw">${ask('A boss on $2,000,000 joins. Which changes more?','The mean',b)}</div>`},
+ after:(st)=>{if(st<1||st>=3)return;const b=st>=2;const max=(v)=>v?2000:120;const set=(m)=>document.querySelectorAll('.col s').forEach(e=>{e.style.height=(e.dataset.w/m*100)+'%';});
+  set(max(prevBoss));requestAnimationFrame(()=>requestAnimationFrame(()=>set(max(b))));prevBoss=b;}},
+{title:'Fixed or variable expenses?',steps:2,
+ say:['Expenses can be divided into two areas. Fixed expenses do not change during a time period, like loan payments, mortgages and regular bills. Variable expenses change over a time period, like clothing, entertainment and food. Variable expenses are estimates.','Streaming costs the same every month, and you don’t need it. Fixed or variable? 〔大拇指：上 fixed，下 variable，點名問 why〕〔點〕Fixed. Fixed is about whether the amount changes, not whether you need it.','Electricity is a different amount every bill. Fixed or variable? 〔大拇指，點名〕〔點〕Variable. The amount changes.'],
+ view:(st)=>`<div class="rule2"><div><b>Fixed expenses</b>Do not change during a time period: loan payments, mortgages, regular bills</div><div><b>Variable expenses</b>Change over a time period: clothing, entertainment, food. These are estimates.</div></div>
+ <div style="height:40px"></div>${ask('Streaming: the same price every month','Fixed',st>=1)}${ask('Electricity: a different bill every month','Variable',st>=2)}`},
+{title:'What do you pay for each month?',steps:0,
+ say:['You are 18, you have moved out, and you have $3,751 a month. What do you have to pay for each month? And how much? 〔舉手，點名，學生說一項按右邊的按鈕，再把他說的金額打進去；按鈕沒有的用下面的 Other 加〕'],
+ view:()=>`<div class="money"><span>In the bank each month: <b>$3,751</b></span></div>
+ <div class="board"><div class="items">${S.items.map((it,i)=>`<div class="item"><span class="n">${esc(it.n)}</span>$<input type="number" min="0" value="${it.a==null?'':it.a}" data-amt="${i}"><button class="x" data-del="${i}" aria-label="Remove">×</button></div>`).join('')}</div>
+ <div><div class="chips">${PRESETS.map((p,i)=>`<button data-pre="${i}" ${S.items.some(x=>x.n===p[0])?'disabled':''}>${p[0]}</button>`).join('')}</div>
+ <form class="add" id="addf"><input class="nm" id="nm" placeholder="Other" autocomplete="off"><input class="am" id="am" type="number" min="0" placeholder="$"><button>Add</button></form></div></div>`},
+{title:'Sort your spending',steps:0,
+ say:['Let’s sort our list. 〔逐項點名，學生答 fixed 按 F，答 variable 按 V。答錯會變紅搖一下，留在上面，再問一次；答對才進格子〕'],
+ view:()=>{const u=S.items.filter(i=>!S.sorted[i.n]);const bin=(k)=>S.items.filter(i=>S.sorted[i.n]===k).map(i=>`<button class="${rightItem===i.n?'ok':''}" data-un="${esc(i.n)}"><span>${esc(i.n)}</span><span>${i.a==null?'':$(i.a)}</span></button>`).join('');
+  return `<div class="pile">${u.map(i=>`<div class="pill${wrongItem===i.n?' wrong':''}"><button data-f="${esc(i.n)}">F</button><span>${esc(i.n)}${wrongItem===i.n?' ✗':''}</span><button data-d="${esc(i.n)}">V</button></div>`).join('')||''}</div>
+  <div class="sort"><div class="bin"><h3>Fixed</h3>${bin('f')}</div><div class="bin"><h3>Variable</h3>${bin('d')}</div></div>`}},
+{title:'Does the money last the month?',steps:2,
+ say:['Here is what we earn and what we spend.','How much is left? 〔等，點名〕〔點〕','This is why we need a budget. 〔點〕A budget is an estimate of income and expenses for a period of time.'],
+ view:(st)=>{const f=sum(i=>S.sorted[i.n]==='f'),d=sum(i=>S.sorted[i.n]==='d'),o=sum(i=>!S.sorted[i.n]);const left=BANK-f-d-o;
+  return `<div class="rows"><div class="row" style="padding:12px 0"><span>In the bank</span><b>$3,751</b></div><div class="row" style="padding:12px 0"><span>Fixed</span><b>${$(f)}</b></div><div class="row" style="padding:12px 0"><span>Variable</span><b>${$(d)}</b></div>${o?`<div class="row" style="padding:12px 0"><span>Not sorted</span><b>${$(o)}</b></div>`:''}
+  <div class="row end" style="padding:12px 0"><span>Left over</span><b class="${vis(st>=1)}">${sgn(left)}</b></div></div>
+  <p class="mid${vis(st>=2)}" style="font-weight:700;margin-top:14px">A budget is an estimate of income and expenses for a period of time.</p>`}},
+{title:'Check your budget',steps:1,
+ say:['Managing your money is like running a small business. Money in, money out.','When your budget is finished, always check that your figures are reasonable estimates. Groceries, $2,000 a month, just for you. Reasonable? 〔大拇指，點名問 why〕〔點〕No. That is about $460 a week on food for one person.','The money remaining can be used as savings, or to buy non-essential items.'],
+ view:(st)=>`<div class="step"><b>1</b><span>Managing money is like operating a small business.</span></div><div class="step"><b>2</b><span>Check that your figures are reasonable estimates.</span></div>${ask('Groceries: $2,000 a month. Reasonable?','No',st>=1)}<div class="step"><b>3</b><span>Money remaining: savings or non-essential items.</span></div>`},
+{title:'Find the savings',steps:3,
+ say:['Here is a monthly budget. How much is left for savings? 〔等，點名〕〔點〕Add the expenses, $2,990. Take it from $3,751. $761.','Groceries are a variable expense. They go up by $150. How much can you save now? 〔點名〕〔點〕$611. Fixed expenses stay put, variable expenses move your savings.','Groceries go back to $600. You want to save $900. What is the most you can spend on entertainment? 〔等，點名〕〔點〕You need $139 more, so entertainment drops to $161.'],
+ view:(st)=>{const row=(a,b,c='')=>`<div class="bt-r ${c}"><span>${a}</span><b>${b}</b></div>`;
+  const qa=(q,a,on)=>`<div class="qa">${q}<span class="ans${vis(on)}">${a}</span></div>`;
+  return `<div class="two"><div>${qa('How much is left for savings?','$3,751 − $2,990 = $761',st>=1)}${qa('Groceries go up by $150. How much can you save now?','$761 − $150 = $611',st>=2)}${qa('Groceries go back to $600. You want to save $900. What is the most you can spend on entertainment?','$139 more: $300 − $139 = $161',st>=3)}</div>
+  <div class="tbl">${row('Income: wages','$3,751','hd')}${row('Fixed','','sub')}${row('Rent','$1,400')}${row('Car loan','$420')}${row('Phone plan','$50')}${row('Variable','','sub')}${row('Groceries','$600')}${row('Transport','$220')}${row('Entertainment','$300')}${row('Savings','$?','hd')}</div></div>`}},
+{title:'Best buy',steps:4,
+ say:['Rice comes in three sizes. Which is the best buy? Work out the price for 1 kg. 〔點〕1 kg bag: $3.20 per kg. 〔點〕2 kg bag: $5.80 divided by 2 is $2.90 per kg. 〔點〕5 kg bag: $15.50 divided by 5 is $3.10 per kg.','Which is the best buy? 〔點名〕〔點〕The 2 kg bag. The biggest bag is not always the cheapest.'],
+ view:(st)=>{const r=(n,p,a,on,b)=>`<div class="row" style="padding:20px 0"><span>${n}</span><span>${p}</span><b class="ans${vis(on)}" style="color:var(--red)${b?';text-decoration:underline':''}">${a}</b></div>`;
+  return `<p class="lead">Rice</p><div class="rows">${r('1 kg bag','$3.20','$3.20 per kg',st>=1)}${r('2 kg bag','$5.80','$2.90 per kg',st>=2)}${r('5 kg bag','$15.50','$3.10 per kg',st>=3)}</div><div style="height:30px"></div>${ask('Which is the best buy?','2 kg bag',st>=4)}`}},
+{title:'Small spending adds up',steps:2,
+ say:['A $6 coffee, every weekday. How much is that in a year? 〔等，點名〕〔點〕$6 times 5 times 52 is $1,560.','How much is that per month? 〔點〕$130. That is one line in your budget you never planned for.'],
+ view:(st)=>`<p class="mid" style="font-size:66px;font-weight:700">$6 coffee, every weekday</p><div style="height:70px"></div>${ask('How much in a year?','$6 × 5 × 52 = $1,560',st>=1)}${ask('How much per month?','$1,560 ÷ 12 = $130',st>=2)}`},
+{id:'activity',title:'Activity time',steps:0,
+ say:['Activity time. You are going to live one month on $3,751. Let\u2019s see who can keep their budget under control.'],
+ view:()=>``},
+{id:'scenario',title:'Scenario',steps:0,
+ say:['Here is the scenario. You have just finished high school and started uni. You have moved out of home, so you have to pay for everything yourself. You have $3,751 a month. Rent is $400 a week in a share house, or $600 a week in your own unit. Electricity is $75 a month in a share house, or $150 on your own.'],
+ view:()=>`<div class="scn"><p>You have just finished high school, started uni and moved out of home.</p><p>You pay for everything yourself.</p><p>Money in the bank each month: <b>$3,751</b></p><p>Rent: share house <b>$400</b> a week, own unit <b>$600</b> a week.</p><p class="sm">Electricity: $75 a month in a share house, $150 a month in your own unit.</p></div>`},
+{id:'join',title:'Join your group',steps:0,
+ say:['One laptop per group. Only one person logs in. Type this address, then enter your group code. 〔等每組都打勾；有組換電腦就點那組的卡片放開〕'],
+ view:()=>{const sets=`<div class="sets">${ctl('Groups','nGroups',[2,3,4,5,6,7,8,9,10])}</div>`;
+  if(!ONLINE||!NET.address)return sets+`<p class="mid">Laptops are not connected. Press Next and enter each group’s slip and costs on this screen.</p>`;
+  let r='';for(let g=0;g<S.nGroups;g++)r+=`<button class="jg" ${NET.seen.includes(g)?`data-release="${g}" title="Click to let another laptop join"`:'disabled'}><span>Group ${g+1}</span><b>${NET.join[g]||''}</b><i>${NET.seen.includes(g)?'✓':''}</i></button>`;
+  if(!NET.tunnel&&NET.tunnelStarting)return sets+`<p class="mid">Getting the website ready… (about a minute)</p>`;
+  return sets+(NET.tunnel?`<p class="lead"><b style="color:var(--red)">One laptop per group.</b> Type this address:</p>${urlBig(NET.tunnel)}`:`<p class="lead">Type this address</p><div class="big" style="font-size:104px">${NET.address}</div>`)+`<div class="jgs" style="margin-top:24px">${r}</div>`}},
+{id:'setup',title:'Plan your month',steps:0,
+ say:['In this bucket are incidents. Some are good, some are bad. Just like life, you don\u2019t know what is going to happen. One person from each group, come and draw a slip, then type the code on your laptop. 〔等每組卡片都出現 Slip〕','You have eight minutes to plan your month. Your income is $3,751, plus or minus your incident. Estimate what everything costs for one month, and work out yourself how much money is left. Be careful: keep your budget under control! 〔按 Start 8 minutes〕','〔剩 2:00 布幕跳出全體意外：每組都 −$600〕Something urgent just happened. Cut something from your budget now!','〔時間到自動鎖定；點各組卡片看預算，再按 Next〕'],
+ view:()=>{if(viaLaptops())return setupOnline();
+  let r='';for(let g=0;g<S.nGroups;g++){const L=leftOf(g);r+=`<div class="gc${L==null?'':' done'}"><h4>Group ${g+1}</h4><label class="cost">Costs $<input type="number" min="0" data-cost="${g}" value="${S.costs[g]==null?'':S.costs[g]}"></label><b class="${L==null?'':L<0?'neg':'pos'}">${L==null?'':'Left '+sgn(L)}</b></div>`;}
+  return `<div class="sets"><span>Income: <b>$3,751</b></span><span style="flex:1"></span>${phaseNow()!=='wait'?'<button class="mini more" data-more="1">+1 minute</button>':''}${ONLINE&&NET.address?'<button class="mini" data-manual="0">Use laptops</button>':''}</div>${timerBanner()}<p class="mid" style="font-size:30px;margin:0 0 12px">Type each group\u2019s total costs.</p><div class="gcs">${r}</div>${msg?`<p class="warn">${msg}</p>`:''}`}},
+{id:'game',title:'What happened to each group',steps:0,
+ say:['Here is what happened to every group. Some were good, some were bad. Just like life, you don\u2019t know what is going to happen.','〔沒輸入代碼的組，在下面按他的代碼補上〕'],
+ view:()=>{const w=waiting(),done=!w.length;const used=new Set(S.log.map(l=>l.code));
+  let c='';for(let i=0;i<S.nGroups;i++){const e=S.log.find(l=>l.g===i);
+   c+=`<div class="card${w.includes(i)?' now':''}${flashG===i?' flash':''}"><h4>Group ${i+1}</h4>${e?`<div class="inc">${e.t}</div><div class="bal ${e.a<0?'neg':'pos'}">${plus(e.a)}</div>`:'<div class="inc wait">Waiting for a slip\u2026</div>'}</div>`;}
+  let pad='';INCIDENTS.forEach(x=>pad+=`<button data-n="${x.code}" ${used.has(x.code)||done?'disabled':''}>${x.code}</button>`);
+  return `<div class="cards">${c}</div><div class="turn"><span>${done?'Every group has a slip':`Waiting for Group ${w.map(g=>g+1).join(', ')}`}</span><span>${done?'':'<button id="rand">No slip: draw for me</button>'}<button id="undo" ${S.log.length?'':'disabled'}>Undo</button></span></div><div class="pad">${pad}</div>`}},
+{title:'Who made it through the month?',steps:1,
+ say:['Who still has money? Who is in debt?','If you could start the month again, what would you cut first? 〔點名〕〔點〕Choosing what to cut before the month starts is what a budget is for.'],
+ view:(st)=>{const a=[];for(let i=0;i<S.nGroups;i++)a.push([i,leftOf(i)]);a.sort((x,y)=>(y[1]??-1e9)-(x[1]??-1e9));
+  return `<div class="rank">${a.map(([g,b])=>`<div><span>Group ${g+1}</span><b class="${b==null?'':b<0?'neg':'pos'}">${b==null?'\u2013':sgn(b)}</b></div>`).join('')}</div>${ask('Start again: what would you cut first?','&nbsp;',false)}<p class="mid${vis(st>=1)}" style="font-weight:700">Make your choices before the month starts.</p>`}}
+];
+
+/* ===== Print views ===== */
+const q=location.search;
+if(q==='?slips'){
+  document.documentElement.classList.add('print');document.body.classList.add('print');
+  const out=document.createElement('div');out.className='slipgrid';
+  out.innerHTML=INCIDENTS.map(c=>`<div class="slipc"><b>${c.code}</b></div>`).join('');
+  document.getElementById('fit').replaceWith(out);
+}else if(q==='?plan_sheet'){
+  document.documentElement.classList.add('print');document.body.classList.add('print');
+  const rows=ITEMS.map(it=>`<tr><td class="lb">${it.label}</td><td class="op">${it.byHousing?`Share house $${it.byHousing[0]} \u00b7 Own unit $${it.byHousing[1]}`:(it.opts||[]).map((o,n)=>`<span>${o} <b>$${it.weekly?Math.round(it.weekly[n]*52/12).toLocaleString('en-AU'):it.prices[n]}</b></span>`).join('')}</td><td class="amt">$</td></tr>`).join('');
+  const one=`<div class="ps pss"><div class="sh"><b>Plan your month</b><span>Group:</span></div>
+  <p class="pq">You have just finished high school, started uni and moved out of home. Income this month: <b>$3,751</b></p>
+  <table class="pst"><tr><th>Item</th><th>Circle one</th><th>Cost a month</th></tr>
+  ${rows}
+  <tr class="tot"><td class="lb">Your incident</td><td class="op"><span class="hint">Slip code:</span></td><td class="amt">$</td></tr>
+  <tr class="tot"><td class="lb">Surprise</td><td class="op"><span class="hint">Your teacher will tell you.</span></td><td class="amt">$</td></tr>
+  <tr class="tot"><td class="lb">Money left</td><td class="op"><span class="hint">Calculate it yourself. Be careful: keep your budget under control!</span></td><td class="amt">$</td></tr></table></div>`;
+  const out=document.createElement('div');out.className='starter-sheet';out.innerHTML=one;
+  document.getElementById('fit').replaceWith(out);
+}else if(q==='?starter'||q==='?starter_ans'){
+  document.documentElement.classList.add('print');document.body.classList.add('print');
+  const ans=q==='?starter_ans';
+  const one=`<div class="slip2"><div class="sh"><b>Starter</b><span>Name:</span></div>${STARTER_Q.map(t=>`<p class="pq">${t}</p>`).join('')}${taxTable(-1)}<div class="pw">${ans?STARTER_A.map(t=>`<p>${t}</p>`).join(''):''}</div></div>`;
+  const out=document.createElement('div');out.className='starter-sheet';out.innerHTML=one+one;
+  document.getElementById('fit').replaceWith(out);
+}else if(q==='?script'){
+  document.documentElement.classList.add('print');document.body.classList.add('print');
+  const out=document.createElement('div');
+  out.className='script';
+  out.innerHTML='<h1>y10 Budget — Script</h1>'+SCENES.map((s,i)=>`<h2>${i+1}. ${s.title}</h2>`+s.say.map(l=>`<p>${l}</p>`).join('')).join('')
+   +'<h2 style="margin-top:6mm">Slip codes (teacher only)</h2><div class="key">'+INCIDENTS.map(c=>`<p><b>${c.code}</b> ${c.t} ${plus(c.a)}</p>`).join('')+'</div>';
+  document.getElementById('fit').replaceWith(out);
+}else{
+/* ===== Run ===== */
+const stage=document.getElementById('stage');
+function fit(){const k=Math.min(innerWidth/1600,innerHeight/900);stage.style.transform=`scale(${k})`;}
+addEventListener('resize',fit);fit();
+function render(){
+  const sc=SCENES[S.s];
+  stage.innerHTML=(sc.id==='activity'?`<div class="act"><h1>Activity time</h1><p>Life Happens: can you control your budget?</p></div>`:sc.id==='cover'?`<div class="cover"><h1>Budgeting</h1><i></i><p>Planning where your money goes</p><small>Year 10</small></div>`:`<div class="bar"><span>${sc.title}</span><span class="tmr" id="tmr"></span></div><div class="body">${sc.view(S.step)}</div>`)+`
+  <div class="nav"><button id="back">← Back</button><button class="go" id="next">Next →</button><span class="count">${S.s+1} / ${SCENES.length}</span><span class="sp"></span><button id="fs">Full screen</button><button id="reset">Reset</button></div>${modal!==null?modalHtml():''}`;
+  if(sc.after)sc.after(S.step);
+  flashG=-1;save();tick();
+}
+let lastPhase=null;
+function tick(){const t=document.getElementById('tmr');const ph=phaseNow();
+  if(t){t.textContent=clockText();t.className='tmr'+(ph==='surprise'||ph==='over'?' warn':'');}
+  if(ph!==lastPhase){const was=lastPhase;lastPhase=ph;const id=SCENES[S.s].id;
+    if(was==='plan'&&ph==='surprise'&&id==='setup'&&modal===null){modal={sur:true};}
+    if(was!==null&&(id==='setup'||id==='game')&&(modal===null||modal.sur))render();}}
+setInterval(tick,250);
+function modalHtml(){
+  if(modal.sur)return `<div class="modal"><div class="sheet surp"><h2>Surprise for every group!</h2><p>${SURPRISE.t}</p><div class="amt neg">${plus(SURPRISE.a)}</div><p>Cut something from your budget now!</p><div class="bt"><button class="go" id="close">Close</button></div></div></div>`;
+  if(modal.detail!==undefined){const g=modal.detail,p=(NET.plans||{})[g],e=S.log.find(l=>l.g===g);
+    const rows=ITEMS.map(it=>`<div class="dr"><span>${it.label}${it.opts&&p.picks[it.key]!=null?': '+it.opts[p.picks[it.key]]:''}</span><b>${$(p.amounts[it.key]||0)}</b></div>`).join('');
+    return `<div class="modal"><div class="sheet detail"><h2>Group ${g+1}</h2><div class="dlist"><div class="dr"><span>Income</span><b>$3,751</b></div>${e?`<div class="dr"><span>${e.t}</span><b>${plus(e.a)}</b></div>`:''}${surpriseOn()?`<div class="dr"><span>${SURPRISE.t}</span><b>${plus(SURPRISE.a)}</b></div>`:''}${rows}</div><div class="dr end"><span>Money left</span><b class="${p.left<0?'neg':'pos'}">${sgn(p.left)}</b></div><div class="bt"><button class="go" id="close">Close</button></div></div></div>`;}
+  if(modal.show){const e=modal.show;return `<div class="modal"><div class="sheet"><h2>Group ${e.g+1} · Slip ${e.code}</h2><p>${e.t}</p><div class="amt ${e.a<0?'neg':'pos'}">${plus(e.a)}</div><div class="bt"><button class="go" id="close">Close</button></div></div></div>`;}
+  const g=waiting()[0],c=incidentFor(modal,g);
+  return `<div class="modal"><div class="sheet"><h2>Group ${g+1} · Slip ${modal}</h2><p>Lock in slip ${modal} for Group ${g+1}?</p><div class="bt"><button id="cancel">Cancel</button><button class="go" id="apply">Lock in</button></div></div></div>`;}
+async function api(p,b){try{const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});return await r.json();}catch(e){return null;}}
+function pushSetup(reset){if(ONLINE)api('/api/setup',{nGroups:S.nGroups,log:S.log,reset:!!reset});}
+const queue=[];
+function showNext(){if(modal===null&&queue.length){const e=queue.shift();modal={show:e};flashG=e.g;render();}}
+async function poll(){let r;try{r=await (await fetch('/api/state')).json();}catch(e){return;}
+  const before=JSON.stringify([NET.seen,NET.address,NET.tunnel,NET.tunnelStarting,NET.join,S.log,NET.plans]);
+  if(r.log.length>S.log.length)flashG=r.log[r.log.length-1].g;
+  NET=r;NET.at=Date.now();S.log=r.log;
+  const id=SCENES[S.s].id;
+  if(before!==JSON.stringify([NET.seen,NET.address,NET.tunnel,NET.tunnelStarting,NET.join,S.log,NET.plans])&&(id==='join'||id==='setup'||id==='game')&&modal===null)render();
+  showNext();}
+function next(){if(modal!==null)return;const sc=SCENES[S.s];
+  if(S.step<sc.steps){S.step++;render();return;}
+  if(sc.id==='setup'&&!viaLaptops()){const g=ready();if(g>=0){msg=`Group ${g+1} has not finished choosing.`;render();return;}msg='';pushSetup();}
+  if(S.s<SCENES.length-1){S.s++;S.step=0;prevBoss=false;render();}}
+function back(){if(modal!==null)return;msg='';if(S.step>0){S.step--;render();return;}
+  if(S.s>0){S.s--;S.step=SCENES[S.s].steps;prevBoss=SCENES[S.s].id==='minwage';render();}}
+async function apply(){const g=waiting()[0],code=modal;modal=null;let e;
+  if(ONLINE){const r=await api('/api/teacher',{g,code});if(r){NET=r;S.log=r.log;e=S.log[S.log.length-1];}}
+  else{const c=incidentFor(code,g);e={g,code,t:c.t,a:c.a};S.log.push(e);}
+  if(e)flashG=g;render();}
+stage.addEventListener('click',async(e)=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+  if(t.id==='next')return next();if(t.id==='back')return back();
+  if(t.id==='close'){modal=null;render();return showNext();}
+  if(t.id==='fs'){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();return;}
+  if(t.id==='reset'){if(confirm('Clear everything and go back to the start?')){S=fresh();NET.remaining=null;modal=null;msg='';prevBoss=false;queue.length=0;if(ONLINE)await api('/api/reset');pushSetup(true);render();}return;}
+  if(t.id==='apply')return apply();if(t.id==='cancel'){modal=null;return render();}
+  if(t.id==='undo'){if(ONLINE){const r=await api('/api/undo');if(r){NET=r;S.log=r.log;}}else S.log.pop();return render();}
+  if(t.id==='rand'){const used=new Set(S.log.map(l=>l.code));const left=INCIDENTS.map(x=>x.code).filter(c=>!used.has(c));modal=left[Math.floor(Math.random()*left.length)];return render();}
+  if(d.pre!==undefined){const p=PRESETS[+d.pre];S.items.push({n:p[0],a:null});return render();}
+  if(d.del!==undefined){const it=S.items.splice(+d.del,1)[0];delete S.sorted[it.n];return render();}
+  if(d.f!==undefined||d.d!==undefined){const n=d.f!==undefined?d.f:d.d,pick=d.f!==undefined?'f':'d',ans=answerOf(n);
+    if(ans&&ans!==pick){wrongItem=n;rightItem=null;return render();}
+    S.sorted[n]=pick;wrongItem=null;rightItem=n;render();rightItem=null;return;}
+  if(d.un!==undefined){delete S.sorted[d.un];return render();}
+  if(d.release!==undefined){if(confirm('Let another laptop join Group '+(+d.release+1)+'?')){const r=await api('/api/release',{g:+d.release});if(r){NET=r;NET.at=Date.now();}render();}return;}
+  if(d.detail!==undefined){modal={detail:+d.detail};return render();}
+  if(d.timer!==undefined){if(ONLINE&&NET.address){const r=await api('/api/timer',{seconds:GAME_SECONDS});if(r){NET=r;NET.at=Date.now();}}else{S.tEnd=Date.now()+GAME_SECONDS*1000;S.surprised=false;}lastPhase=null;return render();}
+  if(d.more!==undefined){if(ONLINE&&NET.address){const r=await api('/api/timer',{add:60});if(r){NET=r;NET.at=Date.now();}}else if(S.tEnd){S.tEnd=Math.max(S.tEnd,Date.now())+60000;}lastPhase=null;return render();}
+  if(d.manual!==undefined){S.manual=d.manual==='1';pushSetup();return render();}
+  if(d.k!==undefined){(S.picks[d.g]=S.picks[d.g]||{})[d.k]=+d.v;msg='';pushSetup();return render();}
+  if(d.set!==undefined){if(S.log.length&&!confirm('This restarts the game. Continue?'))return;S.log=[];S[d.set]=+d.val;pushSetup(true);return render();}
+  if(d.n!==undefined){modal=d.n;return render();}
+});
+stage.addEventListener('change',(e)=>{const c=e.target.dataset.cost;if(c!==undefined){S.costs[+c]=e.target.value===''?null:Math.max(0,+e.target.value);msg='';return render();}
+  const i=e.target.dataset.amt;if(i!==undefined){S.items[+i].a=e.target.value===''?null:Math.max(0,+e.target.value||0);save();}});
+stage.addEventListener('submit',(e)=>{e.preventDefault();const n=document.getElementById('nm').value.trim();const a=+document.getElementById('am').value||0;
+  if(!n||S.items.some(x=>x.n===n))return;S.items.push({n,a});render();const f=document.getElementById('nm');if(f)f.focus();});
+addEventListener('keydown',(e)=>{const tag=(e.target.tagName||'');if(tag==='INPUT')return;
+  if(modal!==null){if(modal.show||modal.sur||modal.detail!==undefined){if(e.key==='Enter'||e.key===' '){e.preventDefault();modal=null;render();showNext();}return;}if(e.key==='Enter'){e.preventDefault();apply();}if(e.key==='Escape'){modal=null;render();}return;}
+  if([' ','ArrowRight','PageDown'].includes(e.key)){e.preventDefault();next();}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();back();}
+  if(e.key==='f'){document.getElementById('fs').click();}
+});
+render();
+if(ONLINE){pushSetup();poll();setInterval(poll,1000);}
+}
+</script>
+</body>
+</html>
